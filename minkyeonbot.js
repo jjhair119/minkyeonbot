@@ -1,5 +1,5 @@
 const scriptName = "민견봇";
-/**
+/*
  * (string) room
  * (string) sender
  * (boolean) isGroupChat
@@ -9,8 +9,49 @@ const scriptName = "민견봇";
  * (string) packageName
  */
 
+/*
+    기여한 자
+    
+    지지지지민경
+    이준상
+    심민성
+    최지원
+    민경록
+*/
+
 let timetable = [,,,,,,];
 let belltable = [,,,,,,,,,,,,,,,,];
+
+let areacode = "B10";
+let schoolcode = "7010536";
+let api_key = "224cb6feef5d495bb61afeb0be362568";
+
+let url = "https://open.neis.go.kr/hub/mealServiceDietInfo?"
+
+function getLunch(date){
+    let lunchparams = {
+        "ATPT_OFCDC_SC_CODE" : areacode,
+        "SD_SCHUL_CODE" : schoolcode,
+        "KEY" : api_key,
+        "Type" : "json",
+        "MLSV_YMD" : date
+    };
+
+    let query = Object.keys(lunchparams) 
+        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(lunchparams[k])) 
+        .join('&');
+
+    url += query;
+
+    fetch(url) 
+        .then(data => data.text()) 
+        .then((text) => { 
+            console.log('request succeeded with JSON response', text) 
+        }).catch(function (error) { 
+            console.log('request failed', error) 
+        });
+
+}
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
   if(1){
