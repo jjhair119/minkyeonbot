@@ -1,3 +1,4 @@
+importClass(org.jsoup.Jsoup);
 const scriptName = "민견봇";
 /*
  * (string) room
@@ -10,48 +11,25 @@ const scriptName = "민견봇";
  */
 
 /*
-    기여한 자
-    
-    지지지지민경
-    이준상
-    심민성
-    최지원
-    민경록
+    개발자
+    - 지지지지민경
+
+    기여한 사람
+    - 민경록
+    - 심민성
+    - 이준상
+    - 조유찬
+    - 최지원 ++1
 */
 
-let timetable = [,,,,,,];
-let belltable = [,,,,,,,,,,,,,,,,];
+let timetable = new Array(7);
+let belltable = new Array(17);
 
 let areacode = "B10";
 let schoolcode = "7010536";
 let api_key = "224cb6feef5d495bb61afeb0be362568";
 
-let url = "https://open.neis.go.kr/hub/mealServiceDietInfo?"
-
-function getLunch(date){
-    let lunchparams = {
-        "ATPT_OFCDC_SC_CODE" : areacode,
-        "SD_SCHUL_CODE" : schoolcode,
-        "KEY" : api_key,
-        "Type" : "json",
-        "MLSV_YMD" : date
-    };
-
-    let query = Object.keys(lunchparams) 
-        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(lunchparams[k])) 
-        .join('&');
-
-    url += query;
-
-    fetch(url) 
-        .then(data => data.text()) 
-        .then((text) => { 
-            console.log('request succeeded with JSON response', text) 
-        }).catch(function (error) { 
-            console.log('request failed', error) 
-        });
-
-}
+let url = "https://open.neis.go.kr/hub/mealServiceDietInfo?";
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
   if(1){
@@ -62,7 +40,12 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
                 replier.reply(timetable[0]);
             }
             else{
-                replier.reply("1교시 : "+timetable[0]+"\n2교시 : "+timetable[1]+"\n3교시 : "+timetable[2]+"\n4교시 : "+timetable[3]+"\n5교시 : "+timetable[4]+"\n6교시 : "+timetable[5]+"\n7교시 : "+timetable[6]);
+                let replytext = "";
+                for(var i = 0;i<7;i++){
+                    replytext += (i+1).toString() + "교시 : " + timetable[i];
+                    replytext += i==6 ? "" : "\n";
+                }
+                replier.reply(replytext);
             }
         }
         else if(msg == ".t 월" ||msg == ".t 화" ||msg == ".t 수" ||msg == ".t 목" ||msg == ".t 금"){
@@ -73,7 +56,12 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
                 case ".t 목" : thu(); break;
                 case ".t 금" : fri(); break;
             }
-            replier.reply("1교시 : "+timetable[0]+"\n2교시 : "+timetable[1]+"\n3교시 : "+timetable[2]+"\n4교시 : "+timetable[3]+"\n5교시 : "+timetable[4]+"\n6교시 : "+timetable[5]+"\n7교시 : "+timetable[6]);
+            let replytext = "";
+            for(var i = 0;i<7;i++){
+                replytext += (i+1).toString() + "교시 : " + timetable[i];
+                replytext += i==6 ? "" : "\n";
+            }
+            replier.reply(replytext);
         }
         else if(msg == ".t 토"||msg == ".t 일"){
             replier.reply("그 주말인거 알면서 꼭 이걸 해봐 어?");
@@ -87,14 +75,25 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
         else if(msg == ".t 30"){
             replier.reply("30분+5분 시간표\n조회 08:30 ~ 08:40\n1교시 08:40 ~ 09:10\n2교시 09:15 ~ 09:45\n3교시 09:50 ~ 10:20\n4교시 10:25 ~ 10:55\n5교시 11:00 ~ 11:30\n6교시 11:35 ~ 12:05\n7교시 12:10 ~ 12:40\n종례 12:40 ~");
         }
-        // else if(msg == ".t 40"){
-        //     replier.reply("30분+5분 시간표\n조회 08:30 ~ 08:40\n1교시 08:40 ~ 09:30\n2교시 9:35 ~ 10:25\n3교시 10:30 ~ 11:20\n4교시 11:25 ~ 12:15\n점심 12:15 ~ 13:05\n5교시 13:10 ~ 14:00\n6교시 14:05 ~ 14:55\n7교시 15:00 ~ 15:50\n종례 15:50 ~");
-        // }
         else if(msg == ".t 45"){
             replier.reply("45분+5분 시간표\n조회 08:30 ~ 08:40\n1교시 08:40 ~ 09:25\n2교시 09:30 ~ 10:15\n3교시 10:20 ~ 11:05\n4교시 11:10 ~ 11:55\n점심 12:00 ~ 12:45\n5교시 12:50 ~ 13:35\n6교시 13:40 ~ 14:25\n7교시 14:30 ~ 15:15\n종례 15:15 ~");
         }
         else if(msg == ".t 50"){
             replier.reply("50분+5분 시간표\n조회 08:30 ~ 08:40\n1교시 08:40 ~ 09:30\n2교시 09:35 ~ 10:25\n3교시 10:30 ~ 11:20\n4교시 11:25 ~ 12:15\n점심 12:15 ~ 13:05\n5교시 13:10 ~ 14:00\n6교시 14:05 ~ 14:55\n7교시 15:00 ~ 15:50\n종례 15:50 ~");
+        }
+        else if(msg == ".t 급식"){
+            let lunchdate = getDateString();
+            let lunchResult=getLunch(lunchdate);
+            replier.reply(lunchdate);
+            replier.reply(lunchResult);
+        }
+        else if(msg.startsWith(".t 급식")){
+            let lunchuserinput = msg.split(" ");
+            if(getDigit(lunchuserinput[2])==8){
+                let lunchResult=getLunch(lunchuserinput[2]);
+                replier.reply(lunchuserinput[2]);
+                replier.reply(lunchResult);
+            }
         }
         else if(msg.startsWith(".t test")){
             let user = msg.split(" ");
@@ -117,36 +116,6 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
                 }
             }
         }
-
-        // else if(msg == ".t 1" ||msg == ".t 2" ||msg == ".t 3" ||msg == ".t 4" ||msg == ".t 5" ||msg == ".t 6" ||msg == ".t 7"|| msg == ".t 점심"){
-        //     switch(msg) {
-        //         case ".t 1" : replier.reply("1교시  8:40 ~ 9:30"); break;
-        //         case ".t 2" : replier.reply("2교시  9:35 ~ 10:25"); break;
-        //         case ".t 3" : replier.reply("3교시  10:30 ~ 11:20"); break;
-        //         case ".t 점심" : replier.reply("점심  11:25 ~ 12:15"); break;
-        //         case ".t 4" : replier.reply("4교시  12:15 ~ 13:05"); break;
-        //         case ".t 5" : replier.reply("5교시  13:10 ~ 14:00"); break;
-        //         case ".t 6" : replier.reply("6교시  14:05 ~ 14:55"); break;
-        //         case ".t 7" : replier.reply("7교시  15:00 ~ 15:50"); break;
-        //     }
-        // }
-
-        // else{
-        //     let userData = (msg.split(' ')).split('.');
-        //     let userYear = userData[0];
-        //     let userMonth = userData[1];
-        //     let userDate = userData[2];
-        //     let userDay = new Date(userYear, userMonth, userDate).getDay();
-
-        //     switch(userDay) {
-        //         case 1 : mon(); printTimetable(); break;
-        //         case 2 : tue(); printTimetable(); break;
-        //         case 3 : wed(); printTimetable(); break;
-        //         case 4 : thu(); printTimetable(); break;
-        //         case 5 : fri(); printTimetable(); break;
-        //         default : replier.reply("잘못된 입력이거나 수업이 없습니다."); break;
-        //     }
-        // }
     }
   }
 }
@@ -177,6 +146,19 @@ function toDay() {
         case 6 :timetable[0] = "오늘 수업은 없습니다.";    //토
                 break;
     }
+
+    return date;
+}
+
+function getDateString() {
+    let day = new Date();
+    let date = (day.getFullYear()).toString();
+    if(day.getMonth()<9){
+        date += "0"+((day.getMonth())+1).toString();
+    }else{
+        date += ((day.getMonth())+1).toString();
+    }
+    date += (day.getDate()).toString();
 
     return date;
 }
@@ -229,6 +211,47 @@ function fri(){
     timetable[4] = "영어2 - 전형주선생님";
     timetable[5] = "자율";
     timetable[6] = "X";
+}
+
+function getLunch(date){
+    let lunchparams = {
+        "ATPT_OFCDC_SC_CODE" : areacode,
+        "SD_SCHUL_CODE" : schoolcode,
+        "KEY" : api_key,
+        "Type" : "xml",
+        "MLSV_YMD" : date
+    };
+    
+    let query = Object.keys(lunchparams) 
+        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(lunchparams[k])) 
+        .join('&');
+
+    url += query;
+
+    let result = Jsoup.connect(url)
+        .data("ATPT_OFCDC_SC_CODE", areacode)
+        .data("SD_SCHUL_CODE", schoolcode)
+        .data("KEY", api_key)
+        .data("Type", 'xml')
+        .data("MLSV_YMD", date)
+        .get();
+
+    let resultText = result.select('DDISH_NM').text();
+
+    resultText = replaceAll(resultText, "<br/>", "\n")
+
+    return resultText;
+}
+
+function replaceAll(str, searchStr, replaceStr) {
+    return str.split(searchStr).join(replaceStr);
+}
+
+ function getDigit(num) {
+    num = num.toString();
+    var i=0;
+    while(num[i]) { i++; };
+    return i;
 }
 
 function timeset(l, r){
