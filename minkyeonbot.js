@@ -29,7 +29,16 @@ let areacode = "B10";
 let schoolcode = "7010536";
 let api_key = "224cb6feef5d495bb61afeb0be362568";
 
-let url = "https://open.neis.go.kr/hub/mealServiceDietInfo?";
+let lunchurl = "https://open.neis.go.kr/hub/mealServiceDietInfo?";
+let scheduleurl = "https://open.neis.go.kr/hub/SchoolSchedule?";
+
+let helpmessage = "시간표봇 명령어\n\n"
+    + ".t - 오늘의 시간표 출력\n.t 월~금 - 해당 요일의 시간표 출력\n"
+    + ".t 급식 - 오늘의 급식 출력\n.t 급식 yyyymmdd - 해당 날짜의 급식 출력\n"
+    + ".t 일정 - 오늘의 일정 출력\n.t 일정 yyyymmdd - 해당 날짜의 일정 출력\n"
+    + ".t 일주일 일정 - 앞으로 7일간의 일정 출력\n"
+    + ".t 전공실 - 각 과목 전공실 출력\n.t 선생님 - 학교 선생님들 교무실 위치 출력\n"
+    + ".t time a b - 수업시간 a분, 쉬는시간 b분 일 때의 시종표 출력";
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
   if(1){
@@ -72,15 +81,6 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
         else if(msg == ".t 전공실"){
             replier.reply("공업일반 - 422실(교실)\n게임프로그래밍 - 343실\n데이터베이스프로그래밍 - 422실(교실)\n인공지능과미래사회 - 421실\n진로 - 422실\n스마트문화앱콘텐츠제작 - 421실\n응용프로그래밍개발A - 423실\n응용프로그래밍개발B - 422실");
         }
-        else if(msg == ".t 30"){
-            replier.reply("30분+5분 시간표\n조회 08:30 ~ 08:40\n1교시 08:40 ~ 09:10\n2교시 09:15 ~ 09:45\n3교시 09:50 ~ 10:20\n4교시 10:25 ~ 10:55\n5교시 11:00 ~ 11:30\n6교시 11:35 ~ 12:05\n7교시 12:10 ~ 12:40\n종례 12:40 ~");
-        }
-        else if(msg == ".t 45"){
-            replier.reply("45분+5분 시간표\n조회 08:30 ~ 08:40\n1교시 08:40 ~ 09:25\n2교시 09:30 ~ 10:15\n3교시 10:20 ~ 11:05\n4교시 11:10 ~ 11:55\n점심 12:00 ~ 12:45\n5교시 12:50 ~ 13:35\n6교시 13:40 ~ 14:25\n7교시 14:30 ~ 15:15\n종례 15:15 ~");
-        }
-        else if(msg == ".t 50"){
-            replier.reply("50분+5분 시간표\n조회 08:30 ~ 08:40\n1교시 08:40 ~ 09:30\n2교시 09:35 ~ 10:25\n3교시 10:30 ~ 11:20\n4교시 11:25 ~ 12:15\n점심 12:15 ~ 13:05\n5교시 13:10 ~ 14:00\n6교시 14:05 ~ 14:55\n7교시 15:00 ~ 15:50\n종례 15:50 ~");
-        }
         else if(msg == ".t 급식"){
             let lunchdate = getDateString();
             let lunchResult=getLunch(lunchdate);
@@ -95,7 +95,41 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
                 replier.reply(lunchResult);
             }
         }
-        else if(msg.startsWith(".t test")){
+        else if(msg == ".t 일정"){
+            let scheduledate = getDateString();
+            let scheduleResult=getSchedule(scheduledate);
+            if(scheduleResult==""){
+                replier.reply(scheduledate+"\n일정이 없습니다.")
+            }else{
+                replier.reply(scheduledate+"\n"+scheduleResult);
+            }
+        }
+        else if(msg == ".t 일주일 일정"){
+            let scheduledate = getDateString();
+            scheduledate = parseInt(scheduledate)
+            let schedulelist = ""
+            for(var i = 0 ; i < 7 ; i++){
+                let scheduleResult=getSchedule(scheduledate+i);
+                if(scheduleResult==""){
+                    schedulelist += (scheduledate+i)+"\n일정이 없습니다.\n\n";
+                }else{
+                    schedulelist += (scheduledate+i)+"\n"+scheduleResult+"\n\n";
+                }
+            }
+            replier.reply(schedulelist.slice(0, -2));
+        }
+        else if(msg.startsWith(".t 일정")){
+            let scheduleuserinput = msg.split(" ");
+            if(getDigit(scheduleuserinput[2])==8){
+                let scheduleResult=getSchedule(scheduleuserinput[2]);
+                if(scheduleResult==""){
+                    replier.reply(scheduleuserinput[2]+"\n일정이 없습니다.")
+                }else{
+                    replier.reply(scheduleuserinput[2]+"\n"+scheduleResult);
+                }
+            }
+        }
+        else if(msg.startsWith(".t time")){
             let user = msg.split(" ");
             if(isNaN(user[2]) || isNaN(user[3])){
             }else{
@@ -115,6 +149,9 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
                     replier.reply("조회 08:30 ~ 08:40\n1교시 8:40 ~ "+resaulttable+"종례 : "+belltable[14]+" ~");
                 }
             }
+        }
+        else if(msg == ".t 도움말"){
+            replier.reply(helpmessage);
         }
     }
   }
@@ -152,13 +189,20 @@ function toDay() {
 
 function getDateString() {
     let day = new Date();
+
     let date = (day.getFullYear()).toString();
+
     if(day.getMonth()<9){
         date += "0"+((day.getMonth())+1).toString();
     }else{
         date += ((day.getMonth())+1).toString();
     }
-    date += (day.getDate()).toString();
+
+    if(day.getDate()<9){
+        date += "0"+((day.getDate())+1).toString();
+    }else{
+        date += ((day.getDate())+1).toString();
+    }
 
     return date;
 }
@@ -188,8 +232,8 @@ function wed(){
     timetable[1] = "게임 - 심희원선생님";
     timetable[2] = "공일 - 이은경선생님";
     timetable[3] = "영어2 - 전형주선생님";
-    timetable[4] = "응프 - 이왕렬선생님";
-    timetable[5] = "응프 - 이왕렬선생님";
+    timetable[4] = "선택과목";
+    timetable[5] = "선택과목";
     timetable[6] = "동아리";
 }
 
@@ -213,6 +257,34 @@ function fri(){
     timetable[6] = "X";
 }
 
+function getSchedule(date){
+    let scheduleparams = {
+        "ATPT_OFCDC_SC_CODE" : areacode,
+        "SD_SCHUL_CODE" : schoolcode,
+        "KEY" : api_key,
+        "Type" : "xml",
+        "AA_YMD" : date
+    }
+
+    let query = Object.keys(scheduleparams) 
+        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(scheduleparams[k])) 
+        .join('&');
+
+    scheduleurl += query;
+
+    let result = Jsoup.connect(scheduleurl)
+        .data("ATPT_OFCDC_SC_CODE", areacode)
+        .data("SD_SCHUL_CODE", schoolcode)
+        .data("KEY", api_key)
+        .data("Type", 'xml')
+        .data("AA_YMD", date)
+        .get();
+
+    let resultSchedule = result.select('EVENT_NM').text();
+
+    return resultSchedule;
+}
+
 function getLunch(date){
     let lunchparams = {
         "ATPT_OFCDC_SC_CODE" : areacode,
@@ -226,9 +298,9 @@ function getLunch(date){
         .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(lunchparams[k])) 
         .join('&');
 
-    url += query;
+    lunchurl += query;
 
-    let result = Jsoup.connect(url)
+    let result = Jsoup.connect(lunchurl)
         .data("ATPT_OFCDC_SC_CODE", areacode)
         .data("SD_SCHUL_CODE", schoolcode)
         .data("KEY", api_key)
@@ -236,11 +308,11 @@ function getLunch(date){
         .data("MLSV_YMD", date)
         .get();
 
-    let resultText = result.select('DDISH_NM').text();
+    let resultLunch = result.select('DDISH_NM').text();
 
-    resultText = replaceAll(resultText, "<br/>", "\n")
+    resultLunch = replaceAll(resultLunch, "<br/>", "\n")
 
-    return resultText;
+    return resultLunch;
 }
 
 function replaceAll(str, searchStr, replaceStr) {
